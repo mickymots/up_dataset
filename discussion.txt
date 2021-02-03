@@ -1,0 +1,31 @@
+open low high close --- raw data
+
+aggregate bars
+
+list of all the tickers - 
+
+
+ticker name -- multiplier - 1     timespan-  minutes
+
+from jan 1- 2019 -    unadjusted True
+
+
+last 2 years of data 
+
+
+breakout - 255 lookback of period
+
+1st jan - 2020 - : 
+
+limit 50000
+
+discard weekends -  pagination :
+
+last timestamp ----
+
+
+------------------------------------
+
+highest for given date
+
+------------------------------------
