@@ -1,11 +1,6 @@
-from urllib import request
-from datetime import datetime, timedelta, date
-import csv
-from functools import reduce
-import json
-import requests
 from multiprocessing import Pool
-from max_minute_vol import getTimeRange, BASE_URL, call_api, record_generator, reducer_fn, get_max_minute_volume
+from apitools import *
+
 
 class Ticker:
     
@@ -23,11 +18,10 @@ class Ticker:
             return record_generator(data=max_volume, ticker=self.ticker)
 
     def build_dataset(self):
+        
         with Pool(4) as p:
             data = p.map(self.get_max_for_day, getTimeRange(self.days))
-            file_name = f'{self.ticker}_1min_max_volume_test.csv'
-            csv_out=csv.writer(open(file_name, 'a'))
-            for line in data:
-                if line:
-                    csv_out.writerow(line)
+            return data
+            
         
+            

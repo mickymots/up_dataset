@@ -1,7 +1,7 @@
 
 from datetime import datetime, timedelta
 
-now = datetime.today()
+now = datetime.today().timestamp()
 print(now)
 #datetime(year, month, day)
 a = datetime(2018, 11, 28) - timedelta(days=5)
@@ -15,5 +15,5 @@ print(b)
 timestamp = (int)(datetime.timestamp(a) * 1000)
 print("timestamp =", timestamp)
 
-timestamp = date.fromtimestamp(1326244364)
+timestamp = datetime.fromtimestamp(1326244364)
 print("Date =", timestamp)
