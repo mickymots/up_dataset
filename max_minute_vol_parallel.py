@@ -11,9 +11,9 @@ def build_dataset(symbol, days, apiKey):
 # write the data to file
 def write_to_file(data, file_name):
     csv_out=csv.writer(open(file_name, 'a'))
+    
     for line in data:
-        if line:
-            csv_out.writerow(line)
+        csv_out.writerow(line.values())
 
 #build output file name for the ticker
 def build_file_name(ticker):

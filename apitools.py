@@ -14,7 +14,7 @@ def call_api(start, end, timespan, mutliplier, ticker, limit, apiKey):
 
 
 def getTimeRange(date_range):
-    start_base = datetime(2021, 1, 31) 
+    start_base = datetime(2021, 1, 31, 9,0,0) 
     end_base = datetime(2021, 1, 31, 23,59, 59)
 
     for i in range(date_range):
@@ -32,9 +32,11 @@ def get_max_minute_volume(data):
         max_volume = reduce(reducer_fn, results)
         return max_volume
 
+# combined_data = {'v': 145761325.0, 'vw': 139.1824, 'o': 139.52, 'c': 137.09, 'h': 141.99, 'l': 136.7, 't': 1611810000000, 'v_1min_max': 3319830.0}
+
 def record_generator(data, ticker):
     timestamp = datetime.fromtimestamp((int)(data['t']/1000))
-    record = (timestamp.strftime('%Y%m%d'), ticker,  data['v'])
+    record = (timestamp.strftime('%Y%m%d'), ticker,  data['v'], data['vw'], data['0'], data['c'], data['h'] , data['l'], data['v_1min_max'])
     return record
 
 def reducer_fn(item1, item2):

@@ -24,8 +24,33 @@ discard weekends -  pagination :
 last timestamp ----
 
 
-------------------------------------
+------------------------------------------------|
 
 highest for given date
 
-------------------------------------\
+------------------------------------------------|
+
+
+LO Size - Trades API (S)
+Average order  - Compute from Trades
+Median Order  - Compute from Trades
+LO Exchange - Trades API (I)
+LO Condition - API (c)
+
+LO %
+Volume Compute
+
+LO%Short
+Interest compute
+
+
+High_Break  - Compute
+
+Volume_Break - Compute
+
+1mVol_Break - Compute
+
+-------------------------------------------------|
+-------------------------------------------------|
+-------------------------------------------------|
+
