@@ -28,4 +28,8 @@ last timestamp ----
 
 highest for given date
 
-------------------------------------
+------------------------------------\
+
+
+https://api.polygon.io/v2/aggs/ticker/AAPL/range/day/1/1612069200000/1612155599000?unadjusted=true&sort=asc&limit=50000&apiKey=B1El3hA6pObNMagdrpbn4pLk_YXpm4cY
+https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/minute/1611723600000/1611809999000?unadjusted=true&sort=asc&limit=50000&apiKey=B1El3hA6pObNMagdrpbn4pLk_YXpm4cY
