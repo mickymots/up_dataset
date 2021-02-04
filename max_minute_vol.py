@@ -6,10 +6,10 @@ import json
 import requests
 encoding = 'utf-8'
 
-apiKey = 'B1El3hA6pObNMagdrpbn4pLk_YXpm4cY'
+
 BASE_URL = 'https://api.polygon.io/v2/aggs/ticker/{ticker}/range/{timespan}/{multiplier}/{start}/{end}?unadjusted=true&sort=asc&limit=50000&apiKey={apiKey}'
 
-def call_api(start, end, timespan, mutliplier, ticker, limit ):
+def call_api(start, end, timespan, mutliplier, ticker, limit, apiKey):
     url = BASE_URL.format(ticker=ticker, multiplier=mutliplier, timespan=timespan, start=start, end=end, apiKey=apiKey )
     with requests.get(url) as response:
         return json.loads(response.text)
@@ -42,13 +42,13 @@ def record_generator(data, ticker):
 def reducer_fn(item1, item2):
     return item1 if item1['v'] >=  item2['v'] else item2
 
-def main(days, ticker):
+def main(days, ticker, apiKey):
     file_name = f'{ticker}_1min_max_volume.csv'
     csv_out=csv.writer(open(file_name, 'a'))
     
     for (start, end) in getTimeRange(days):
         
-        per_min_volume_data = call_api(start,end, 1, 'minute',ticker, 50000)
+        per_min_volume_data = call_api(start,end, 1, 'minute',ticker, 50000, apiKey)
 
         max_volume = get_max_minute_volume(per_min_volume_data)
 
@@ -59,4 +59,5 @@ def main(days, ticker):
 if __name__ == '__main__':
     days = int(input('Enter # of days to query for? '))
     ticker = input('Enter ticker of the stock ? ')
-    main(days, ticker)
+    apiKey = input('Enter API Key: ')
+    main(days, ticker, apiKey)
