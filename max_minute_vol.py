@@ -15,7 +15,7 @@ def call_api(start, end, timespan, mutliplier, ticker, limit ):
         return json.loads(response.text)
 
 
-def getDateRange(date_range):
+def getTimeRange(date_range):
     start_base = datetime(2021, 1, 31) 
     end_base = datetime(2021, 1, 31, 23,59, 59)
 
@@ -42,20 +42,21 @@ def record_generator(data, ticker):
 def reducer_fn(item1, item2):
     return item1 if item1['v'] >=  item2['v'] else item2
 
-def main():
-    days = int(input('Enter # of days to query for? '))
-    aapl_file = open('AAPL_1min.csv', 'a')
-    csv_out=csv.writer(aapl_file)
-    for time_range in getDateRange(days):
-        start, end = time_range
-        per_min_volume_data = call_api(start,end, 1, 'minute','AAPL', 50000)
+def main(days, ticker):
+    file_name = f'{ticker}_1min_max_volume.csv'
+    csv_out=csv.writer(open(file_name, 'a'))
+    
+    for (start, end) in getTimeRange(days):
+        
+        per_min_volume_data = call_api(start,end, 1, 'minute',ticker, 50000)
 
         max_volume = get_max_minute_volume(per_min_volume_data)
 
         if(max_volume):
-            csv_out.writerow(record_generator(max_volume, 'AAPL'))
-            print( record_generator(max_volume, 'AAPL'))
+            csv_out.writerow(record_generator(data=max_volume, ticker=ticker))
             
 
 if __name__ == '__main__':
-    main()
+    days = int(input('Enter # of days to query for? '))
+    ticker = input('Enter ticker of the stock ? ')
+    main(days, ticker)
