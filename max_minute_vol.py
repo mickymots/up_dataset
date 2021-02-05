@@ -21,7 +21,7 @@ def build_dataset(days, ticker, apiKey):
     
     for (start, end) in getTimeRange(days):
         
-        per_min_volume_data = call_api(start,end, 1, 'minute',ticker, 50000, apiKey)
+        per_min_volume_data = call_vol_api(start,end, 1, 'minute',ticker, 50000, apiKey)
 
         max_volume = get_max_minute_volume(per_min_volume_data)
 
