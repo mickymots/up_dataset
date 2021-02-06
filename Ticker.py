@@ -1,6 +1,6 @@
 from multiprocessing import Pool
 from apitools import *
-
+import pandas as pd
 
 class Ticker:
 
@@ -24,31 +24,58 @@ class Ticker:
 
     def get_trade_record_for_ts(self, timestamp):
         (start, start_ts, end_ts)  = self.day
-        return call_trades_api(start, self.ticker, apiKey=self.apiKey, timestamp=timestamp)
+        try:
+            return call_trades_api(start, self.ticker, apiKey=self.apiKey, timestamp=timestamp)
+        except Exception as e:
+            print(e)
+
     
 
     def get_trades_record_for_day(self):
         (start, start_ts, end_ts)  = self.day
+        print(f'call trade records')
 
         more_pages = True
         timestamp = None
-        count = 0
+
+        total_record = 0
+        total_volume = 0
+        max_lo = 0
+        lo_c = []
+        exchange = ''
+
         while more_pages:
             data = self.get_trade_record_for_ts(timestamp)
             # print(f"trade data = {data['results_count']}")
-            if('results_count' in data):
+            if data and 'results_count' in data:
                 results_count = data['results_count']
-                more_pages = Ticker.limit <= results_count
+                
+                # total record
+                total_record += results_count
+                try:
+                                    #max lot in page  LO s , LO Ex I LO con  c
+                    df = pd.json_normalize(data['results'])
 
-                if(results_count):
-                    count += 1
+                    total_volume += df['s'].sum()
+                    if max_lo < df['s'].max():
+                        max_lo = df['s'].max()
+                        maxIdx = df['s'].idxmax()
+                        exchange = df.iloc[maxIdx]['i']
+                        lo_c = df.iloc[maxIdx]['c']
+                except Exception as e:
+                    print(e)
+                more_pages = Ticker.limit <= results_count
+                if more_pages:
                     last_record = data['results'][-1]
                     timestamp = last_record['t']
             else:
                 more_pages = False
         
-        # print(f'total pages = {count} on {start} for {self.ticker}')
-        return count
+        average_order = total_volume/total_record
+        return {'Average Order': average_order, 'Median Order': 100,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c}
+
+
+
 
     def get_record_for_day(self):
         (start, start_ts, end_ts) = self.day
@@ -57,9 +84,18 @@ class Ticker:
         per_day_volume_data = call_api(
             start_ts, end_ts, 1, 'day', self.ticker, 50000, self.apiKey)
 
-        if per_day_volume_data['resultsCount']:
+        
+        record_exists_for_day = 'resultsCount' in per_day_volume_data
+        # print(f"record exists for day = {record_exists_for_day}")
+
+        if record_exists_for_day:
             trade_record = self.get_trades_record_for_day()
-            return {**per_day_volume_data['results'][0], **per_min_volume_data}
+            print(f'trade = {trade_record}')
+            return {**per_day_volume_data['results'][0], **per_min_volume_data, **trade_record}
+        else:
+            print(f'no data - {per_day_volume_data}')
 
     def build_dataset(self):
-        return self.get_record_for_day()
+        data =  self.get_record_for_day()
+        print(f'data - {data}')
+        return data

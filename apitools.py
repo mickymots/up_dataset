@@ -10,14 +10,13 @@ BASE_URL = 'https://api.polygon.io/v2/aggs/ticker/{ticker}/range/{timespan}/{mul
 
 def call_api(start, end, timespan, mutliplier, ticker, limit, apiKey):
     url = BASE_URL.format(ticker=ticker, multiplier=mutliplier, timespan=timespan, start=start, end=end, apiKey=apiKey )
-    with requests.get(url) as response:
-        return json.loads(response.text)
+    return call_service(url)
 
 TRADE_API = 'https://api.polygon.io/v2/ticks/stocks/trades/{ticker}/{start}?limit=50000&apiKey={apiKey}&reverse=false'
 
 
 def requests_retry_session(
-    retries=3,
+    retries=5,
     backoff_factor=0.3,
     status_forcelist=(500, 502, 504),
     session=None,

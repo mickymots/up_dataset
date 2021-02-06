@@ -31,7 +31,11 @@ def build_dataset(ticker, day, apiKey):
 
 def main(day_offset, ticker):
     day = getDateTuple(day_offset)
-    get_dataset(ticker, day)
+    print(f"{day} - {ticker}")
+    try:
+        get_dataset(ticker, day)
+    except ValueError as error:
+        print(f'{ticker} - {error}')
 
     
 
@@ -42,6 +46,7 @@ def get_dataset(ticker, day):
         apiKey = getenv('apiKey')
 
         data = build_dataset(ticker=ticker, day=day, apiKey=apiKey)
+        print(data)
         if data:
             write_to_file(data, file_name= build_file_name(ticker, day))
         else:

@@ -12,15 +12,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 def run_batch(day, batch):
-    with ThreadPoolExecutor(max_workers=100) as executor:
+    with ThreadPoolExecutor(max_workers=40) as executor:
         fn = partial(builder, day)
-        executor.map(fn, batch, timeout=10)
+        executor.map(fn, batch)
 
 
 
 def main():
     ts = time()
-    csv_df = pd.read_csv('./tickers.csv', header=0, usecols=['symbol'], chunksize=200, iterator=True)
+    csv_df = pd.read_csv('./tickers.csv', header=0, usecols=['symbol'], chunksize=100, iterator=True)
 
     i = 0
     j = 1
@@ -36,7 +36,7 @@ def main():
             batch.append(df['symbol'][ind])
 
 
-        # print(batch)
+
         run_batch(4, batch)
     logging.info('Took %s seconds', time() - ts)   
 
