@@ -10,6 +10,7 @@ BASE_URL = 'https://api.polygon.io/v2/aggs/ticker/{ticker}/range/{timespan}/{mul
 
 def call_api(start, end, timespan, mutliplier, ticker, limit, apiKey):
     url = BASE_URL.format(ticker=ticker, multiplier=mutliplier, timespan=timespan, start=start, end=end, apiKey=apiKey )
+    print(f'vol_api_call = {url}' )
     return call_service(url)
 
 TRADE_API = 'https://api.polygon.io/v2/ticks/stocks/trades/{ticker}/{start}?limit=50000&apiKey={apiKey}&reverse=false'
@@ -51,9 +52,10 @@ def call_trades_api(start, ticker, apiKey, timestamp):
 
 def getDateTuple(day):
     start_base = datetime(2021, 1, 31, 9,0,0) - timedelta(days=day)
+    end_base = datetime(2021, 1, 31, 23,59,0) - timedelta(days=day)
 
     start_ts = (int)(datetime.timestamp(start_base) * 1000)
-    end_ts = (int)(datetime.timestamp(start_base) * 1000)
+    end_ts = (int)(datetime.timestamp(end_base) * 1000)
     start = start_base.strftime("%Y-%m-%d")
 
     return (start, start_ts, end_ts)

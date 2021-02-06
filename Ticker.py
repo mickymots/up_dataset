@@ -17,9 +17,9 @@ class Ticker:
         max_1_min_volume = get_max_minute_volume(per_min_volume_data)
 
         if max_1_min_volume:
-            return {'v_1min_max': max_1_min_volume['v']}
+            return {'1mVolume': max_1_min_volume['v'], 'Ticker': self.ticker}
         else:
-            return {'v_1min_max': 0}
+            return {'1mVolume': 0, 'Ticker': self.ticker}
 
 
     def get_trade_record_for_ts(self, timestamp):
@@ -33,7 +33,7 @@ class Ticker:
 
     def get_trades_record_for_day(self):
         (start, start_ts, end_ts)  = self.day
-        print(f'call trade records')
+        
 
         more_pages = True
         timestamp = None        
@@ -56,14 +56,13 @@ class Ticker:
                     timestamp = last_record['t']
             else:
                 more_pages = False
-        (avg, median_order, max_lo, exchange, lo_c) = self.df_work(results)
+        (avg, median_order, max_lo, exchange, lo_c, lo_per_vol) = self.df_work(results)
         
-        return {'Average Order': avg, 'Median Order': 100,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c}
+        return {'Average Order': avg, 'Median Order': 100,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol}
 
-
+    # Compute Lot Avg, Median, Max, LO % Volunme
     def df_work(self, data):
         try:
-
             df = pd.json_normalize(data['results'])
 
             total_volume= df['s'].sum()            
@@ -74,7 +73,7 @@ class Ticker:
             exchange = df.iloc[maxIdx]['i']
             lo_c = df.iloc[maxIdx]['c']
             
-            return (avg, median_order, max_lo, exchange, lo_c)
+            return (avg, median_order, max_lo, exchange, lo_c, max_lo/total_volume)
         except Exception as e:
             print(e)
 
@@ -84,19 +83,16 @@ class Ticker:
 
         per_day_volume_data = call_api(
             start_ts, end_ts, 1, 'day', self.ticker, 50000, self.apiKey)
-
         
         record_exists_for_day = 'resultsCount' in per_day_volume_data
-        # print(f"record exists for day = {record_exists_for_day}")
 
         if record_exists_for_day:
-            trade_record = self.get_trades_record_for_day()
-            print(f'trade = {trade_record}')
+            trade_record = self.get_trades_record_for_day()            
             return {**per_day_volume_data['results'][0], **per_min_volume_data, **trade_record}
         else:
             print(f'no data - {per_day_volume_data}')
 
     def build_dataset(self):
         data =  self.get_record_for_day()
-        print(f'data - {data}')
+        # print(f'data - {data}')
         return data

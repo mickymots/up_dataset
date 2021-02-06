@@ -19,7 +19,7 @@ def write_to_file(data, file_name):
 #build output file name for the ticker
 def build_file_name(ticker, day):
     file_version = (str)(datetime.today().timestamp())[:11]
-    file_name = f'data/{ticker}_1min_max_volume_{file_version}.csv'
+    file_name = f'data/{ticker}_{file_version}.csv'
     return file_name
 
 
