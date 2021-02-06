@@ -17,3 +17,10 @@ print("timestamp =", timestamp)
 
 timestamp = datetime.fromtimestamp(1326244364).strftime('%d-%m-%y')
 print("Date =", timestamp)
+
+
+fromDt = datetime.fromisoformat('2021-02-20')
+toDt = datetime.fromisoformat('2021-02-16')
+
+print((fromDt-toDt).days)
+

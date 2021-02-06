@@ -52,6 +52,7 @@ class Ticker:
                 more_pages = False
         (avg, median_order, max_lo, exchange, lo_c, lo_per_vol) = self.df_work(results)
         
+        
         return {'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol}
 
     # Compute Lot Avg, Median, Max, LO % Volunme
@@ -82,7 +83,7 @@ class Ticker:
 
         if record_exists_for_day:
             trade_record = self.get_trades_record_for_day()            
-            return {**per_min_volume_data, **trade_record, **per_day_volume_data['results'][0],**{'date': start}}
+            return {**{'date': start},**per_min_volume_data, **trade_record, **per_day_volume_data['results'][0]}
         else:
             print(f'no data - {per_day_volume_data}')
 

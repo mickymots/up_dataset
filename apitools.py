@@ -51,8 +51,8 @@ def call_trades_api(start, ticker, apiKey, timestamp):
  
 
 def getDateTuple(day):
-    start_base = datetime(2021, 1, 31, 9,0,0) - timedelta(days=day)
-    end_base = datetime(2021, 1, 31, 23,59,0) - timedelta(days=day)
+    start_base = datetime(2021, 2, 5, 9,0,0) - timedelta(days=day)
+    end_base = start_base + timedelta(hours=11, minutes=59)
 
     start_ts = (int)(datetime.timestamp(start_base) * 1000)
     end_ts = (int)(datetime.timestamp(end_base) * 1000)
