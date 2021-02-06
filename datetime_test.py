@@ -15,5 +15,5 @@ print(b)
 timestamp = (int)(datetime.timestamp(a) * 1000)
 print("timestamp =", timestamp)
 
-timestamp = datetime.fromtimestamp(1326244364)
+timestamp = datetime.fromtimestamp(1326244364).strftime('%d-%m-%y')
 print("Date =", timestamp)

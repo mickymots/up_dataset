@@ -74,7 +74,7 @@ def getTimeRange(date_range):
         yield (start,end)
 
 def get_max_minute_volume(data):
-    if('results' in data):
+    if 'results' in data:
         results = data['results']
         max_volume = reduce(reducer_fn, results)
         return max_volume

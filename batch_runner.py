@@ -12,15 +12,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 def run_batch(day, batch):
+
+    days = [i for i in range(700)]
+
     with ThreadPoolExecutor(max_workers=40) as executor:
-        fn = partial(builder, day)
-        executor.map(fn, batch)
+        fn = partial(builder, 'ACI')
+        executor.map(fn, days)
 
 
 
 def main():
     ts = time()
-    csv_df = pd.read_csv('./tickers_1.csv', header=0, usecols=['symbol'], chunksize=100, iterator=True)
+    csv_df = pd.read_csv('../source/tickers.csv', header=0, usecols=['symbol'], chunksize=200, iterator=True)
 
     i = 0
     j = 1

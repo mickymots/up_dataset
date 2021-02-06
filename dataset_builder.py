@@ -13,13 +13,13 @@ def build_dataset(symbol, days, apiKey):
 def write_to_file(data, file_name):
     csv_columns = data.keys()
     csv_out=csv.DictWriter(open(file_name, 'a'), fieldnames=csv_columns)
-    csv_out.writeheader()
+    
     csv_out.writerow(data)
 
 #build output file name for the ticker
 def build_file_name(ticker, day):
-    file_version = (str)(datetime.today().timestamp())[:11]
-    file_name = f'data/{ticker}_{file_version}.csv'
+    file_version = datetime.today().strftime('%d%m%y')
+    file_name = f'data/dataset_2yrs_{ticker}_{file_version}.csv'
     return file_name
 
 
@@ -29,7 +29,7 @@ def build_dataset(ticker, day, apiKey):
     ticker = Ticker(ticker, day, apiKey)
     return ticker.build_dataset()
 
-def main(day_offset, ticker):
+def main(ticker, day_offset):
     day = getDateTuple(day_offset)
     print(f"{day} - {ticker}")
     try:
