@@ -23,7 +23,7 @@ def run_batch(day, batch):
 
 def main():
     ts = time()
-    csv_df = pd.read_csv('../source/tickers.csv', header=0, usecols=['symbol'], chunksize=200, iterator=True)
+    csv_df = pd.read_csv('./source/tickers.csv', header=0, usecols=['symbol'], chunksize=200, iterator=True)
 
     i = 0
     j = 1
