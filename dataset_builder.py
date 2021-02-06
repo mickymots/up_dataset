@@ -41,7 +41,6 @@ def main(day_offset, ticker):
 
 # main functions to build the dataset
 def get_dataset(ticker, day):
-    # print(f'get dataset called for = {ticker}')
     if(getenv('apiKey')):
         apiKey = getenv('apiKey')
 

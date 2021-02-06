@@ -36,46 +36,47 @@ class Ticker:
         print(f'call trade records')
 
         more_pages = True
-        timestamp = None
-
-        total_record = 0
-        total_volume = 0
-        max_lo = 0
-        lo_c = []
-        exchange = ''
-
+        timestamp = None        
+        results = {}
         while more_pages:
             data = self.get_trade_record_for_ts(timestamp)
             # print(f"trade data = {data['results_count']}")
             if data and 'results_count' in data:
                 results_count = data['results_count']
-                
-                # total record
-                total_record += results_count
-                try:
-                                    #max lot in page  LO s , LO Ex I LO con  c
-                    df = pd.json_normalize(data['results'])
 
-                    total_volume += df['s'].sum()
-                    if max_lo < df['s'].max():
-                        max_lo = df['s'].max()
-                        maxIdx = df['s'].idxmax()
-                        exchange = df.iloc[maxIdx]['i']
-                        lo_c = df.iloc[maxIdx]['c']
-                except Exception as e:
-                    print(e)
+                print(type(data))
+                if 'results' in results:
+                    results['results'].append(data['results'])
+                else:
+                    results = data
+
                 more_pages = Ticker.limit <= results_count
                 if more_pages:
                     last_record = data['results'][-1]
                     timestamp = last_record['t']
             else:
                 more_pages = False
+        (avg, median_order, max_lo, exchange, lo_c) = self.df_work(results)
         
-        average_order = total_volume/total_record
-        return {'Average Order': average_order, 'Median Order': 100,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c}
+        return {'Average Order': avg, 'Median Order': 100,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c}
 
 
+    def df_work(self, data):
+        try:
 
+            df = pd.json_normalize(data['results'])
+
+            total_volume= df['s'].sum()            
+            max_lo = df['s'].max()
+            median_order = df['s'].median()
+            avg = df['s'].mean()
+            maxIdx = df['s'].idxmax()
+            exchange = df.iloc[maxIdx]['i']
+            lo_c = df.iloc[maxIdx]['c']
+            
+            return (avg, median_order, max_lo, exchange, lo_c)
+        except Exception as e:
+            print(e)
 
     def get_record_for_day(self):
         (start, start_ts, end_ts) = self.day

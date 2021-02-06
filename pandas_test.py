@@ -13,10 +13,12 @@ with open('./2021-01-27.json', 'r') as file:
 
     sum = df['s'].sum()
     max = df['s'].max()
+    median = df['s'].median()
+    avg = df['s'].mean()
     maxIdx = df['s'].idxmax()
     print(df.iloc[41697])
     print(df.iloc[41697]['c'])
     print(df.iloc[41697]['i'])
-    print(f'sum {sum}, max = {max}')
+    print(f'sum {sum}, max = {max} - median {median}- mean {avg}')
 
     print(f'{time()-ts} time ')
