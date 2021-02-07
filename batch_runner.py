@@ -5,18 +5,19 @@ from os import getenv
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from time import time
-
 from datetime import datetime, timedelta
 import os
 import numpy as numpy
-
+from short_loader import main as get_short_data
 import logging
+
+import asyncio
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 headers = ['date','1mVolume','Ticker','Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition',
            'lo_per_vol','v','vw','o','c','h','l','t','n', 'change','float', 'outstanding', 'flot_percent', 'High_BO','vol_BO', '1min_BO']
-
+short_headers = ['ShortVolume','ShortExemptVolume', 'TotalVolume', 'Market']
 #date,1mVolume,Ticker,Average Order,Median Order,LO_Size,LO_Exchange,LO_Condition,lo_per_vol,v,vw,o,c,h,l,t,n
 #set the output file name
 output_file = 'dataset.csv'
@@ -34,16 +35,16 @@ def run_batch(days, ticker):
         executor.shutdown(wait=True)
 
 
-def main():
+async def build_dataset(short_df):
     ts_start = time()
     batch_size = int(input('Enter Batch Size : '))
     days_to_query = int(input('Enter Days to Query : '))
     
-    csv_df = pd.read_csv('./source/tickers.csv', header=0, usecols=['symbol'], chunksize=batch_size, iterator=True)
+    csv_df = pd.read_csv('./source/tickers_150.csv', header=0, usecols=['symbol'], chunksize=batch_size, iterator=True)
     prep_output_file()
     execute_batch(csv_df, days_to_query)
     
-    process_batch()    
+    await process_batch(short_df)    
     logging.info('Total Processing Took %s seconds', time() - ts_start)   
 
 
@@ -92,8 +93,11 @@ def execute_batch(batch_dataframe, days_to_query):
 
 
 # process the batch to add breakout data
-def process_batch():
+async def process_batch(short_df):
     ts_batch_start = time()
+    
+    
+    
     prep_process_file()
     
     df = pd.read_csv(f'data/{output_file}', header=0)
@@ -106,13 +110,47 @@ def process_batch():
     #float calcualtion
     updated_df = calculate_float(df)
 
-    result = calcualte_breakouts(updated_df)
+    breakout_result = calcualte_breakouts(updated_df)
+    
+    breakout_df = pd.DataFrame(breakout_result)
+    
+    logging.info('waiting for short interest to load ---')
+    breakout_df.columns=headers
+    final_dataset = calcualte_shorts(breakout_df, short_df)
+    final_headers = headers + short_headers
     try:
-        pd.DataFrame(result).to_csv(f'data/processed_{output_file}', header=headers, index=None)
+        final_dataset.to_csv(f'data/processed_{output_file}', header=final_headers, index=None)
     except Exception as e:
         logging.error(e)
     logging.info('Batch Processing Took %s seconds', time() - ts_batch_start)  
     
+
+
+def calcualte_shorts(data_df, short_df):
+    logging.info('-- calculating short interest ---')
+    
+    # short_headers = ['ShortVolume','ShortExemptVolume', 'TotalVolume', 'Market']
+    
+    print(short_df.dtypes)
+    print(data_df.dtypes)
+
+    short_df.dropna(inplace=True)
+    short_df = short_df.rename(columns={c: c.replace(' ', '') for c in short_df.columns}) 
+    data_df = data_df.rename(columns={c: c.replace(' ', '') for c in data_df.columns}) 
+    
+    print(short_df)
+
+    print(data_df)
+    
+    # short_df['date'] = short_df.date.astype(str)
+    
+    
+    updated_df = data_df.merge(short_df, how="left", on=['date', 'Ticker'])
+
+
+
+    print(updated_df.dtypes)
+    return updated_df
 
 def calculate_float(data_df):
     float_df = pd.read_csv(f'source/outstanding_float.csv', header=0)
@@ -196,13 +234,24 @@ def getPDDate(value):
     return pd.to_datetime(value,format="%Y-%m-%d").date()
     
 
-if __name__ == '__main__':
+
+async def main():
     if(getenv('apiKey')):
+        ts_start = time()
+        logging.info('called to load short interest data ---')
+        short_load = asyncio.create_task(get_short_data())
+
         full = input('Enter f for full query operation else press any key : ')
+
+        short_df = await short_load
         if full == 'f':
-            main()
+            await build_dataset(short_df)
         else:
-            process_batch()
-        # main()
+            await process_batch(short_df)
+        logging.info('Took %s seconds', time() - ts_start)  
     else:
         raise EnvironmentError('set the apiKey env variable')
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
