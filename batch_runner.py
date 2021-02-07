@@ -64,9 +64,8 @@ def prep_process_file():
         file_version = int(round(datetime.today().timestamp()))
         os.rename(f'data/processed_{output_file}', f'data/processed_{output_file}_{file_version}.csv')
     
-    
-    
-    
+
+
 # execute the batch of tickers for given numbers of days
 def execute_batch(batch_dataframe, days_to_query):
     ts_batch_start = time()
@@ -116,21 +115,48 @@ def calcualte_breakouts(numpy_list):
     i = 0
     
     for item in numpy_list:
-        los = item[5]
+        lot_size = item[5]
+        volume_1min = item[1]
+        volume = item[9]
+        
         fromDt = getPDDate(item[0])
-        foundDt = getPDDate(item[0])
+        found_lot_dt = getPDDate(item[0])
+        found_vol_1min_dt = getPDDate(item[0])
+        found_vol_dt = getPDDate(item[0])
 
+        # lot size breakout
         try:
-            foundDt = next(getPDDate(x[0]) for x in numpy_list[i+1:] if x[5] >= los)
+            found_lot_dt = next(getPDDate(x[0]) for x in numpy_list[i+1:] if x[5] >= lot_size)
         
         except StopIteration as e:
             logging.warning('highest of rest of the records')
-            foundDt = getPDDate(numpy_list[-1][0])
-            i+1
+            found_lot_dt = getPDDate(numpy_list[-1][0])
+        except Exception as e:
+            logging.error("error in breakout calculation", e)
+        
+        # 1 min volume breakoit
+        try:
+            found_vol_1min_dt = next(getPDDate(x[0]) for x in numpy_list[i+1:] if x[1] >= volume_1min)
+        
+        except StopIteration as e:
+            logging.warning('highest of rest of the records')
+            found_vol_1min_dt = getPDDate(numpy_list[-1][0])
         except Exception as e:
             logging.error("error in breakout calculation", e)
             
-        days = numpy.busday_count(foundDt, fromDt)
+        # breakout volume 
+        try:
+            found_vol_dt = next(getPDDate(x[0]) for x in numpy_list[i+1:] if x[9] >= volume)
+        
+        except StopIteration as e:
+            logging.warning('highest of rest of the records')
+            found_vol_dt = getPDDate(numpy_list[-1][0])
+        except Exception as e:
+            logging.error("error in breakout calculation", e)
+            
+
+            
+        days = numpy.busday_count(found_lot_dt, fromDt)
         item.put(-1,(days))
         
         i += 1

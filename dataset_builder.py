@@ -33,6 +33,8 @@ def build_dataset(ticker, day, apiKey):
     ticker = Ticker(ticker, day, apiKey)
     return ticker.build_dataset()
 
+
+
 def main(ticker, day_offset):
     day = getDateTuple(day_offset)
     log.info(f"{day} - {ticker}")

@@ -31,7 +31,7 @@ class Ticker:
         try:
             return call_trades_api(start, self.ticker, apiKey=self.apiKey, timestamp=timestamp)
         except Exception as e:
-            log.error(e)
+            log.error(f'trade call - {e}')
 
     def get_trades_record_for_day(self):
         more_pages = True
@@ -53,13 +53,19 @@ class Ticker:
                     timestamp = last_record['t']
             else:
                 more_pages = False
-        (avg, median_order, max_lo, exchange, lo_c, lo_per_vol) = self.df_work(results)
         
+        trade_data = self.compute_lot_stats(results)
+        if trade_data:
+            (avg, median_order, max_lo, exchange, lo_c, lo_per_vol) = trade_data
+        else:
+            log.warn(f'No trade data for {self.day} {self.ticker}')
+            
+        trade_json = {'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol}
         
-        return {'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol}
+        return trade_json
 
     # Compute Lot Avg, Median, Max, LO % Volunme
-    def df_work(self, data):
+    def compute_lot_stats(self, data):
         try:
             df = pd.json_normalize(data['results'])
 
@@ -73,7 +79,7 @@ class Ticker:
             
             return (avg, median_order, max_lo, exchange, lo_c, max_lo/total_volume)
         except Exception as e:
-            log.error(e)
+            log.warn(f'compute_lot_stats for data - {data}')
 
     def get_record_for_day(self):
         (start, start_ts, end_ts) = self.day
