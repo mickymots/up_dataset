@@ -13,7 +13,7 @@ import logging
 
 import asyncio
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 headers = ['date','1mVolume','Ticker','Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition',
            'lo_per_vol','v','vw','o','c','h','l','t','n', 'change','float', 'outstanding', 'flot_percent', 'High_BO','vol_BO', '1min_BO']
@@ -129,27 +129,12 @@ async def process_batch(short_df):
 def calcualte_shorts(data_df, short_df):
     logging.info('-- calculating short interest ---')
     
-    # short_headers = ['ShortVolume','ShortExemptVolume', 'TotalVolume', 'Market']
-    
-    print(short_df.dtypes)
-    print(data_df.dtypes)
-
     short_df.dropna(inplace=True)
     short_df = short_df.rename(columns={c: c.replace(' ', '') for c in short_df.columns}) 
     data_df = data_df.rename(columns={c: c.replace(' ', '') for c in data_df.columns}) 
-    
-    print(short_df)
 
-    print(data_df)
-    
-    # short_df['date'] = short_df.date.astype(str)
-    
-    
     updated_df = data_df.merge(short_df, how="left", on=['date', 'Ticker'])
 
-
-
-    print(updated_df.dtypes)
     return updated_df
 
 def calculate_float(data_df):

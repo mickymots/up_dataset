@@ -5,3 +5,5 @@ __pycache__/*
 data/**
 short_data/**
 *.txt
+
+*.log
