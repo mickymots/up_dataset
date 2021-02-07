@@ -1,6 +1,10 @@
 from multiprocessing import Pool
 from apitools import *
 import pandas as pd
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log = logging.getLogger(__name__)
 
 class Ticker:
 
@@ -27,7 +31,7 @@ class Ticker:
         try:
             return call_trades_api(start, self.ticker, apiKey=self.apiKey, timestamp=timestamp)
         except Exception as e:
-            print(e)
+            log.error(e)
 
     def get_trades_record_for_day(self):
         more_pages = True
@@ -38,7 +42,6 @@ class Ticker:
             if data and 'results_count' in data:
                 results_count = data['results_count']
 
-                print(type(data))
                 if 'results' in results:
                     results['results'].append(data['results'])
                 else:
@@ -70,7 +73,7 @@ class Ticker:
             
             return (avg, median_order, max_lo, exchange, lo_c, max_lo/total_volume)
         except Exception as e:
-            print(e)
+            log.error(e)
 
     def get_record_for_day(self):
         (start, start_ts, end_ts) = self.day
@@ -85,9 +88,8 @@ class Ticker:
             trade_record = self.get_trades_record_for_day()            
             return {**{'date': start},**per_min_volume_data, **trade_record, **per_day_volume_data['results'][0]}
         else:
-            print(f'no data - {per_day_volume_data}')
+            log.info(f'no data - {per_day_volume_data}')
 
     def build_dataset(self):
         data =  self.get_record_for_day()
-        # print(f'data - {data}')
         return data
