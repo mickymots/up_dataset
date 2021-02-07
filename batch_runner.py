@@ -14,7 +14,8 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-headers = ['date','1mVolume','Ticker','Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition','lo_per_vol','v','vw','o','c','h','l','t', 'High Break']
+headers = ['date','1mVolume','Ticker','Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition',
+           'lo_per_vol','v','vw','o','c','h','l','t','n', 'change','float', 'outstanding', 'flot_percent', 'High_BO','vol_BO', '1min_BO']
 
 #date,1mVolume,Ticker,Average Order,Median Order,LO_Size,LO_Exchange,LO_Condition,lo_per_vol,v,vw,o,c,h,l,t,n
 #set the output file name
@@ -95,24 +96,44 @@ def process_batch():
     ts_batch_start = time()
     prep_process_file()
     
-    csv_df = pd.read_csv(f'data/{output_file}', header=0)
+    df = pd.read_csv(f'data/{output_file}', header=0)
     
-    csv_df.sort_values(by='t', inplace=True, ascending=False)
-    numpy_list = csv_df.to_numpy()
+    df.sort_values(by='t', inplace=True, ascending=False)
+    
+    # difference between close price
+    calculate_change(df)
+    
+    #float calcualtion
+    updated_df = calculate_float(df)
 
-    calcualte_breakouts(numpy_list)
+    result = calcualte_breakouts(updated_df)
     try:
-        pd.DataFrame(numpy_list).to_csv(f'data/processed_{output_file}', header=headers, index=None)
+        pd.DataFrame(result).to_csv(f'data/processed_{output_file}', header=headers, index=None)
     except Exception as e:
         logging.error(e)
     logging.info('Batch Processing Took %s seconds', time() - ts_batch_start)  
     
-     
+
+def calculate_float(data_df):
+    float_df = pd.read_csv(f'source/outstanding_float.csv', header=0)
+    updated_df = data_df.merge(float_df, how="left", on=['Ticker'])
+    
+    updated_df['flot_percent'] = (updated_df['Float'] / updated_df['Outstanding']) *100
+
+    return updated_df
+    
+
+
+#calculate change of closing prices
+def calculate_change(df):
+    df['change'] = df.groupby(['Ticker'])['c'].diff(periods=-1)
     
 
 # calculate the breakouts
-def calcualte_breakouts(numpy_list):
+def calcualte_breakouts(csv_df):
+    numpy_list = csv_df.to_numpy()
     i = 0
+    result = []
     
     for item in numpy_list:
         lot_size = item[5]
@@ -155,12 +176,22 @@ def calcualte_breakouts(numpy_list):
             logging.error("error in breakout calculation", e)
             
 
-            
-        days = numpy.busday_count(found_lot_dt, fromDt)
-        item.put(-1,(days))
+        high_BO_days = numpy.busday_count(found_lot_dt, fromDt)
+        vol_BO_days = numpy.busday_count(found_vol_dt, fromDt)
+        vol_1min_BO_days = numpy.busday_count(found_vol_1min_dt, fromDt)
+        
+        # Array to be added as column
+        column_to_be_added = numpy.array([high_BO_days, vol_BO_days, vol_1min_BO_days])
+
+        # numpy.column_stack((numpy_list,column_to_be_added))
+        item = numpy.hstack((item, column_to_be_added))
+        
+        result.append(item)
         
         i += 1
-    
+    return result
+
+
 def getPDDate(value):
     return pd.to_datetime(value,format="%Y-%m-%d").date()
     

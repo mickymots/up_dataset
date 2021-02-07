@@ -60,7 +60,7 @@ class Ticker:
         else:
             log.warn(f'No trade data for {self.day} {self.ticker}')
             
-        trade_json = {'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol}
+        trade_json = {'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol*100}
         
         return trade_json
 

@@ -3,3 +3,5 @@ __pycache__/*
 *.json
 *.key
 data/**
+short_data/**
+*.txt
