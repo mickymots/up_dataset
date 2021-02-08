@@ -79,7 +79,7 @@ class Ticker:
             
             return (avg, median_order, max_lo, exchange, lo_c, max_lo/total_volume)
         except Exception as e:
-            log.warn(f'compute_lot_stats for data - {data}')
+            log.warn(f'compute_lot_stats for data {self.day} - {self.ticker} - {e}')
 
     def get_record_for_day(self):
         (start, start_ts, end_ts) = self.day

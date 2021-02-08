@@ -15,8 +15,12 @@ import asyncio
 
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
 headers = ['date','1mVolume','Ticker','Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition',
-           'lo_per_vol','v','vw','o','c','h','l','t','n', 'change','float', 'outstanding', 'flot_percent', 'High_BO','vol_BO', '1min_BO']
+           'lo_per_vol','v','vw','o','c','h','l','t','n', 'change']
+float_headers = ['float', 'outstanding', 'flot_percent']
+breakout_headers = [ 'High_BO','vol_BO', '1min_BO']
 short_headers = ['ShortVolume','ShortExemptVolume', 'TotalVolume', 'Market']
 #date,1mVolume,Ticker,Average Order,Median Order,LO_Size,LO_Exchange,LO_Condition,lo_per_vol,v,vw,o,c,h,l,t,n
 #set the output file name
@@ -40,7 +44,7 @@ async def build_dataset(short_df):
     batch_size = int(input('Enter Batch Size : '))
     days_to_query = int(input('Enter Days to Query : '))
     
-    csv_df = pd.read_csv('./source/tickers_150.csv', header=0, usecols=['symbol'], chunksize=batch_size, iterator=True)
+    csv_df = pd.read_csv('./source/tickers_1.csv', header=0, usecols=['symbol'], chunksize=batch_size, iterator=True)
     prep_output_file()
     execute_batch(csv_df, days_to_query)
     
@@ -95,13 +99,10 @@ def execute_batch(batch_dataframe, days_to_query):
 # process the batch to add breakout data
 async def process_batch(short_df):
     ts_batch_start = time()
-    
-    
-    
     prep_process_file()
     
     df = pd.read_csv(f'data/{output_file}', header=0)
-    
+    df.columns = headers
     df.sort_values(by='t', inplace=True, ascending=False)
     
     # difference between close price
@@ -115,9 +116,11 @@ async def process_batch(short_df):
     breakout_df = pd.DataFrame(breakout_result)
     
     logging.info('waiting for short interest to load ---')
-    breakout_df.columns=headers
+
+    breakout_df.columns= headers + float_headers + breakout_headers
+
     final_dataset = calcualte_shorts(breakout_df, short_df)
-    final_headers = headers + short_headers
+    final_headers = headers + float_headers + breakout_headers + short_headers
     try:
         final_dataset.to_csv(f'data/processed_{output_file}', header=final_headers, index=None)
     except Exception as e:
@@ -130,8 +133,7 @@ def calcualte_shorts(data_df, short_df):
     logging.info('-- calculating short interest ---')
     
     short_df.dropna(inplace=True)
-    short_df = short_df.rename(columns={c: c.replace(' ', '') for c in short_df.columns}) 
-    data_df = data_df.rename(columns={c: c.replace(' ', '') for c in data_df.columns}) 
+    print(data_df)
 
     updated_df = data_df.merge(short_df, how="left", on=['date', 'Ticker'])
 
@@ -142,7 +144,7 @@ def calculate_float(data_df):
     updated_df = data_df.merge(float_df, how="left", on=['Ticker'])
     
     updated_df['flot_percent'] = (updated_df['Float'] / updated_df['Outstanding']) *100
-
+    updated_df.columns = headers + float_headers
     return updated_df
     
 
