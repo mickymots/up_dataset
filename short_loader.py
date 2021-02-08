@@ -37,13 +37,7 @@ async def main():
     
     df.date = df.date.astype(str)
 
-    # df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
-
-
-
-    # print(df)
-    # print(df)
-    # df.to_csv('short_try.csv', index=False)
+   
     
     return df
 

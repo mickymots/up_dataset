@@ -7,14 +7,14 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import logging
 
-logging.basicConfig(filename='log/apitools.log', level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='log/apitools.log', level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
 BASE_URL = 'https://api.polygon.io/v2/aggs/ticker/{ticker}/range/{timespan}/{multiplier}/{start}/{end}?unadjusted=true&sort=asc&limit=50000&apiKey={apiKey}'
 
 def call_api(start, end, timespan, mutliplier, ticker, limit, apiKey):
     url = BASE_URL.format(ticker=ticker, multiplier=mutliplier, timespan=timespan, start=start, end=end, apiKey=apiKey )
-    log.info(f'vol_api_call = {url}' )
+    log.debug(f'vol_api_call = {url}' )
     return call_service(url)
 
 TRADE_API = 'https://api.polygon.io/v2/ticks/stocks/trades/{ticker}/{start}?limit=50000&apiKey={apiKey}&reverse=false'

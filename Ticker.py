@@ -3,7 +3,7 @@ from apitools import *
 import pandas as pd
 import logging
 
-logging.basicConfig(filename='log/ticker.log', level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='log/ticker.log', level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
 class Ticker:
@@ -56,31 +56,42 @@ class Ticker:
         
         trade_data = self.compute_lot_stats(results)
         if trade_data:
-            (avg, median_order, max_lo, exchange, lo_c, lo_per_vol) = trade_data
+            (ts, avg, median_order, max_lo, exchange, lo_c, lo_per_vol) = trade_data
         else:
             log.warn(f'No trade data for {self.day} {self.ticker}')
             
-        trade_json = {'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol*100}
+        trade_json = {'ts': ts, 'Average Order': avg, 'Median Order': median_order,  'LO_Size': max_lo, "LO_Exchange": exchange, 'LO_Condition': lo_c, 'lo_per_vol': lo_per_vol*100}
         
         return trade_json
+
+
 
     # Compute Lot Avg, Median, Max, LO % Volunme
     def compute_lot_stats(self, data):
         try:
             df = pd.json_normalize(data['results'])
-
+            log.debug(df)
+            
             total_volume= df['s'].sum()            
             max_lo = df['s'].max()
             median_order = df['s'].median()
             avg = df['s'].mean()
+            
             maxIdx = df['s'].idxmax()
-            exchange = df.iloc[maxIdx]['i']
+            log.debug(f'maxIdx = {maxIdx}')
+            
+            exchange = df.iloc[maxIdx]['x']
+            ts = df.iloc[maxIdx]['t']
             lo_c = df.iloc[maxIdx]['c']
             
-            return (avg, median_order, max_lo, exchange, lo_c, max_lo/total_volume)
+            return (ts, avg, median_order, max_lo, exchange, lo_c, max_lo/total_volume)
         except Exception as e:
             log.warn(f'compute_lot_stats for data {self.day} - {self.ticker} - {e}')
+            log.debug("\n ----------------------\n ",data)
+            log.debug("\n ----------------------\n ")
 
+
+  
     def get_record_for_day(self):
         (start, start_ts, end_ts) = self.day
         per_min_volume_data = self.get_record_for_min()
@@ -92,9 +103,9 @@ class Ticker:
 
         if record_exists_for_day:
             trade_record = self.get_trades_record_for_day()            
-            return {**{'date': start},**per_min_volume_data, **trade_record, **per_day_volume_data['results'][0]}
+            return {**{'date': start}, **per_min_volume_data, **trade_record, **per_day_volume_data['results'][0]}
         else:
-            log.info(f'no data - {per_day_volume_data}')
+            log.debug(f'no data - {per_day_volume_data}')
 
     def build_dataset(self):
         data =  self.get_record_for_day()

@@ -13,15 +13,15 @@ import logging
 
 import asyncio
 
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-headers = ['date','1mVolume','Ticker','Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition',
+headers = ['date','1mVolume','Ticker','ts', 'Average Order','Median Order','LO_Size','LO_Exchange','LO_Condition',
            'lo_per_vol','v','vw','o','c','h','l','t','n', 'change']
 float_headers = ['float', 'outstanding', 'flot_percent']
 breakout_headers = [ 'High_BO','vol_BO', '1min_BO']
-short_headers = ['ShortVolume','ShortExemptVolume', 'TotalVolume', 'Market']
+short_headers = ['ShortVolume','ShortExemptVolume', 'TotalVolume', 'Market', 'sh_percent_vol', 'sh_percent_float', 'lo_percent_short']
 #date,1mVolume,Ticker,Average Order,Median Order,LO_Size,LO_Exchange,LO_Condition,lo_per_vol,v,vw,o,c,h,l,t,n
 #set the output file name
 output_file = 'dataset.csv'
@@ -87,7 +87,7 @@ def execute_batch(batch_dataframe, days_to_query):
         for ind in df.index:
             batch.append(df['symbol'][ind])
 
-        logging.info(batch)
+        logging.debug(batch)
         run_batch_fn = partial(run_batch, days_to_query)
         for ticker in batch:
             run_batch_fn(ticker)
@@ -115,12 +115,14 @@ async def process_batch(short_df):
     
     breakout_df = pd.DataFrame(breakout_result)
     
-    logging.info('waiting for short interest to load ---')
+    logging.debug('waiting for short interest to load ---')
 
     breakout_df.columns= headers + float_headers + breakout_headers
 
     final_dataset = calcualte_shorts(breakout_df, short_df)
     final_headers = headers + float_headers + breakout_headers + short_headers
+
+
     try:
         final_dataset.to_csv(f'data/processed_{output_file}', header=final_headers, index=None)
     except Exception as e:
@@ -130,12 +132,16 @@ async def process_batch(short_df):
 
 
 def calcualte_shorts(data_df, short_df):
-    logging.info('-- calculating short interest ---')
+    logging.debug('-- calculating short interest ---')
     
     short_df.dropna(inplace=True)
     print(data_df)
 
     updated_df = data_df.merge(short_df, how="left", on=['date', 'Ticker'])
+
+    updated_df['sh_percent_vol'] =  (updated_df['ShortVolume']/updated_df['v']) * 100
+    updated_df['sh_percent_float'] =  (updated_df['ShortVolume']/updated_df['float']) * 100
+    updated_df['lo_percent_short'] =  (updated_df['LO_Size']/updated_df['v']) * 100
 
     return updated_df
 
@@ -201,9 +207,9 @@ def calcualte_breakouts(csv_df):
             logging.error("error in breakout calculation", e)
             
 
-        high_BO_days = numpy.busday_count(found_lot_dt, fromDt)
-        vol_BO_days = numpy.busday_count(found_vol_dt, fromDt)
-        vol_1min_BO_days = numpy.busday_count(found_vol_1min_dt, fromDt)
+        high_BO_days = numpy.busday_count(found_lot_dt, fromDt) -1 
+        vol_BO_days = numpy.busday_count(found_vol_dt, fromDt) -1
+        vol_1min_BO_days = numpy.busday_count(found_vol_1min_dt, fromDt) -1
         
         # Array to be added as column
         column_to_be_added = numpy.array([high_BO_days, vol_BO_days, vol_1min_BO_days])
@@ -225,7 +231,7 @@ def getPDDate(value):
 async def main():
     if(getenv('apiKey')):
         ts_start = time()
-        logging.info('called to load short interest data ---')
+        logging.debug('called to load short interest data ---')
         short_load = asyncio.create_task(get_short_data())
 
         full = input('Enter f for full query operation else press any key : ')
